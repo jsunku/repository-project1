@@ -8,7 +8,7 @@ use ieee.std_logic_1164.all;
  use work.sync_fifo_iface.all;
  use work.stc_pkt_handler_package.all;
 
- entity g1g_stc_mem_interfacer is
+ entity payload_handler is
     port(
         CLK                             : in std_logic;
         RST_N                           : in std_logic;
@@ -49,3 +49,9 @@ use ieee.std_logic_1164.all;
 
     );
     end entity;
+
+     architecture behavior of payload_handler is
+
+      begin
+
+       end architecture;
