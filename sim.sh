@@ -5,7 +5,7 @@
 #gtkwave t2.ghw t2.gtkw
 
 ghdl -c --std=08 global_package.vhd g1g_pstc_packet_handling.vhd  stc_pkt_handler_package.vhd\
-g1g_pstc_packet_handlinge.vhd g1g_stc_mem_interfacer.vhd  \
+g1g_pstc_packet_handlinge.vhd g1g_stc_mem_interfacer.vhd  payload_handler.vhd\
 #tb_sband_g1g_top.vhd
 #ghdl -m --std=08 tb_sband_g1g_top
 #ghdl -r --std=08 tb_sband_g1g_top --wave=tb_sband_g1g_top.ghw --stop-time=1ms
