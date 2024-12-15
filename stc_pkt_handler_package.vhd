@@ -44,6 +44,8 @@
     constant c_pps_sync_pulse_8us   : unsigned(31 downto 0) := to_unsigned(256, 32);
     constant c_pps_sync_pulse_10us   : unsigned(31 downto 0) := to_unsigned(320, 32);
 
+    type counter_vector is array (natural range <>) of slv8_t;
+
     --! \brief FSM used in g1g_pstc_packet_handling.vhd
     type fsm_packet_handling is (IDLE,CTRL_FIFO_CHECK,FIRST_WORD_AND_PSTC_TYPE_CHECK,ERROR,
         LENGTH_CHECK,STC_GEN_START,STC_GEN_RES, DONE, PSTC_ID
@@ -131,8 +133,8 @@
     ) return unsigned is 
         --precalculated constants as per system clock
         constant MS_100_count : integer := 3_200_000; --for 100ms = 0.1sec = 1000000000ns so 1000000000/31.25
-        constant CYCLE_PER_MS :integer := 32_000_000;-- becase payload numeric +1 is eauel to 0.1sec more 
-        variable result : unsigned(15 downto 0);     
+        constant CYCLE_PER_MS :integer := 32_000_000; -- becase payload numeric +1 is eauel to 0.1sec more 
+        variable result : unsigned(31 downto 0);     
     begin
       if payload = x"0000" then
         result  := to_unsigned(MS_100_count,32);

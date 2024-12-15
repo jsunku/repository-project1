@@ -64,6 +64,8 @@
         ACK                             : in std_logic;
         PSTC_ID_O                       : out std_logic_vector(15 downto 0);
         CBAND_SBAND_DIFF                : out std_logic;
+        REPORT_WINDOW_PAYLOAD : out std_logic_vector(31 downto 0);---0X08
+        REPORT_FILTER_PAYLOAD : out std_logic_vector(31 downto 0);--0X09
         -- SPW Signal
         BL_PORT_GET_CFG_I	            : in slv5_t; --!	SpW node get configuration signals:
                                                     --! Bit 0: AutoStart: 0b0 = disabled, 0b1 = enabled Bit 1: LinkStart: 0b0 = no action, 0b1 = start link
@@ -281,6 +283,8 @@ begin
            REPORT_FILTER_PAYLOAD_CFIFO_RD_EN    =>REPORT_FILTER_PAYLOAD_CFIFO_RD_EN,
            REPORT_FILTER_PAYLOAD_CFIFO_EMPTY    =>REPORT_FILTER_PAYLOAD_CFIFO_EMPTY
 
+        REPORT_WINDOW_PAYLOAD : out std_logic_vector(31 downto 0);---0X08
+        REPORT_FILTER_PAYLOAD : out std_logic_vector(31 downto 0);--0X09
          	
        );
 
