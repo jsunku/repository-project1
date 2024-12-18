@@ -38,10 +38,12 @@
 
  entity g1g_pstc_packet_handling is 
     port (
-        CLK                             : in std_logic;
+        CLK_32                          : in std_logic;
         RST_N                           : in std_logic;
         MODE_INFO                       : in std_logic;
+        INIT_DONE                       : in std_logic;
         SUID                            : in std_logic;
+        FILTER_OR_WINDOW                : out slv2_t;  ---to tell stm to generate ack for it
         -- Error signals 
         ERROR_S_DROP_PSTC	            : out std_logic; --! Detected soft error (received PSTC packet dropped due to wrong PSTC_PKT format (length/CRC error/parameter out of range)
         ERROR_H_DFIFO	                : out std_logic; --! Detected hard error (inconsistency in Data-/Control FIFO).
@@ -64,23 +66,10 @@
         ACK                             : in std_logic;
         PSTC_ID_O                       : out std_logic_vector(15 downto 0);
         CBAND_SBAND_DIFF                : out std_logic;
-        REPORT_WINDOW_PAYLOAD : out std_logic_vector(31 downto 0);---0X08
-        REPORT_FILTER_PAYLOAD : out std_logic_vector(31 downto 0);--0X09
-        -- SPW Signal
-        BL_PORT_GET_CFG_I	            : in slv5_t; --!	SpW node get configuration signals:
-                                                    --! Bit 0: AutoStart: 0b0 = disabled, 0b1 = enabled Bit 1: LinkStart: 0b0 = no action, 0b1 = start link
-                                                    --! Bit 2: LinkDisable: 0b0 = link enabled, 0b1 = link  disabled
-                                                    --! Bit 3: PortReset: 0b0 = no action, 0b1 = reset port
-                                                    --! Bit 4: LinkSpeed: 0b0 = slow (10 Mbit/s), 0b1 = fast (port dependent)
-                                                    --! Note: received from SpW Node
-         -- Configuration settings
-         REPORT_WINDOW_PAYLOAD_CFIFO_RD_DATA   : out std_logic_vector(31 downto 0);
-         REPORT_WINDOW_PAYLOAD_CFIFO_RD_EN     : in std_logic; 
-         REPORT_WINDOW_PAYLOAD_CFIFO_EMPTY     : out std_logic;
-                 
-         REPORT_FILTER_PAYLOAD_CFIFO_RD_DATA   : out std_logic_vector(31 downto 0);
-         REPORT_FILTER_PAYLOAD_CFIFO_RD_EN     : in std_logic; 
-         REPORT_FILTER_PAYLOAD_CFIFO_EMPTY     : out std_logic
+        REPORT_WINDOW_PAYLOAD           : out std_logic_vector(31 downto 0);---0X08
+        REPORT_FILTER_PAYLOAD           : out std_logic_vector(31 downto 0);--0X09
+        CBAND_EN                        : out std_logic
+         
 
     );
     end entity g1g_pstc_packet_handling;
@@ -92,7 +81,7 @@ architecture behavior of g1g_pstc_packet_handling is
     signal s_done   : slv2_t;
     signal s_count  : natural range 0 to c_max_size;
 begin
-    seq: process(CLK, RST_N)
+    seq: process(CLK_32, RST_N)
     begin
         if RST_N = '0' and MODE_INFO = '0' then 
             r.state                 <= IDLE;
@@ -108,7 +97,7 @@ begin
             r.stc_id                <= (others => '0');
             r.stc_format_error      <= '0';
             r.start                 <= '0';
-        elsif rising_edge(CLK) then 
+        elsif rising_edge(CLK_32) then 
             r    <= rin;
            
         end if;
@@ -262,9 +251,9 @@ begin
         CBAND_SBAND_DIFF            <= r.stc_c_band;  --BIT INFORMS TO UPDATA SBAND OR CBAND COUNTERS
     end process packet_handling;
 
-   memif0 : entity work.g1g_stc_mem_interfacer 
+   memif0 : entity work. g1g_stc_mem_interfacer
        port map (
-           CLK                         => CLK,
+           CLK                         => CLK_32,
            RST_N                       => RST_N,
            SUID                       => SUID,
            START                       => r.start,
@@ -273,20 +262,19 @@ begin
            COUNT                       => s_count,
            STC_TYPE                    => r.stc_type,
            STC_ID                      => r.stc_id,
+           CBAND_EN                    => CBAND_EN,
            DFIFO_RD_DATA               => DFIFO_RD_DATA,
            DFIFO_RD_EN                 => s_rd_en,
-           REPORT_WINDOW_PAYLOAD_CFIFO_RD_DATA  =>REPORT_WINDOW_PAYLOAD_CFIFO_RD_DATA,
-           REPORT_WINDOW_PAYLOAD_CFIFO_RD_EN    =>REPORT_WINDOW_PAYLOAD_CFIFO_RD_EN,
-           REPORT_WINDOW_PAYLOAD_CFIFO_EMPTY    =>REPORT_WINDOW_PAYLOAD_CFIFO_EMPTY,
-           
-           REPORT_FILTER_PAYLOAD_CFIFO_RD_DATA  =>REPORT_FILTER_PAYLOAD_CFIFO_RD_DATA,
-           REPORT_FILTER_PAYLOAD_CFIFO_RD_EN    =>REPORT_FILTER_PAYLOAD_CFIFO_RD_EN,
-           REPORT_FILTER_PAYLOAD_CFIFO_EMPTY    =>REPORT_FILTER_PAYLOAD_CFIFO_EMPTY
-
-        REPORT_WINDOW_PAYLOAD : out std_logic_vector(31 downto 0);---0X08
-        REPORT_FILTER_PAYLOAD : out std_logic_vector(31 downto 0);--0X09
-         	
+           O_STM_ACK_DIFFERNTIATOR     => FILTER_OR_WINDOW,
+           REPORT_WINDOW_PAYLOAD       => REPORT_WINDOW_PAYLOAD,
+           REPORT_FILTER_PAYLOAD       => REPORT_FILTER_PAYLOAD
+               
        );
-
+        
+           
+           
+           
+        
+       
 
 end architecture;
