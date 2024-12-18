@@ -39,11 +39,11 @@
     constant c_max_size             : integer := 31; --! Max 13 bytes on RCC FPGA
     constant c_paramter_ncorrect    : slv8_t  := x"01"; --! as per ICD
 
-    constant c_pps_sync_pulse_4us   : unsigned(31 downto 0) := to_unsigned(128, 32); --4us = 4000ns  : 4000/31.25 = 128 clck cycles
-    constant c_pps_sync_pulse_6us   : unsigned(31 downto 0) := to_unsigned(192, 32);
-    constant c_pps_sync_pulse_8us   : unsigned(31 downto 0) := to_unsigned(256, 32);
-    constant c_pps_sync_pulse_10us   : unsigned(31 downto 0) := to_unsigned(320, 32);
-
+   -- constant c_pps_sync_pulse_4us   : unsigned(31 downto 0) := to_unsigned(128, 32); --4us = 4000ns  : 4000/31.25 = 128 clck cycles
+   -- constant c_pps_sync_pulse_6us   : unsigned(31 downto 0) := to_unsigned(192, 32);
+   -- constant c_pps_sync_pulse_8us   : unsigned(31 downto 0) := to_unsigned(256, 32);
+   -- constant c_pps_sync_pulse_10us   : unsigned(31 downto 0) := to_unsigned(320, 32);
+--
     type counter_vector is array (natural range <>) of slv8_t;
 
     --! \brief FSM used in g1g_pstc_packet_handling.vhd
@@ -88,8 +88,31 @@
         sp_address_set_cdmu     : slv2_t;
         sp_address_set_plcu     : slv2_t;
         bandwidth_alloc_set     : slv64_t;
-        prio_buffer_rate        : slv4_t;      
+        prio_buffer_rate        : slv4_t; 
+        stm_ack_differntiator   : slv2_t;
     end record;
+   --! \brief FSM used in g1g_pstc_packet_handling.vhd
+   type payload_handling is (
+    IDLE,WINDOW_REPORT_ST, PAYLOAD_HANDLE_ST,CREATE_INVALID_STM_ACK,FILTER_CHECK,DONE_ST
+ );
+
+    type g1g_payload_handling_t is record
+        state       : payload_handling;
+        sband_data  : counter_vector(15 downto 0); -- 16 counters of 8 bits (counter_vector defined in stc_pkt_handler_package)
+        cband_data  : counter_vector(15 downto 0); -- 16 counters of 8 bits
+        valid_out   : slv2_t;
+        sband_cband : std_logic; 
+        payload_for_stm_ack : slv32_t;                  -- 0: S-band, 1: C-band
+        clk_counter : std_logic_vector(15 downto 0);
+        s_or_cband  :std_logic; 
+        valid_invalid_stc : slv2_t;  --for stm_execution 
+        all_counters_value : slv2_t;
+        logged_counter_O : std_logic_vector(3 downto 0);
+        start_update_cunters : std_logic;
+        window_stc_id_and_payload : slv32_t;
+        filter_stc_id_and_payload  :  slv32_t;
+        filter_mask_counter_int : integer range 0 to 20;--upto 15 is enough
+     end record g1g_payload_handling_t;
     --! \Address and Length array definition
     --! defined as per ICD
     --! \{
@@ -112,7 +135,13 @@
     --! Function declaration that searches for an address match and returns corresponding length
     function check_add_get_len (addr : std_logic_vector( octet - 1 downto 0))
     return std_logic_vector;
+
+    function convertto_clk_cycles(
+        payload : slv16_t
+    ) return unsigned ;
   end package stc_pkt_handler_package;
+
+
 
   package body stc_pkt_handler_package is 
     --! \brief Checks if the argument is in the 2D matrix predefined and returns the length else 
@@ -133,8 +162,8 @@
     ) return unsigned is 
         --precalculated constants as per system clock
         constant MS_100_count : integer := 3_200_000; --for 100ms = 0.1sec = 1000000000ns so 1000000000/31.25
-        constant CYCLE_PER_MS :integer := 32_000_000; -- becase payload numeric +1 is eauel to 0.1sec more 
-        variable result : unsigned(31 downto 0);     
+        constant CYCLE_PER_MS :integer := 32_000_000;-- becase payload numeric +1 is eauel to 0.1sec more 
+        variable result : unsigned(15 downto 0);     
     begin
       if payload = x"0000" then
         result  := to_unsigned(MS_100_count,32);
