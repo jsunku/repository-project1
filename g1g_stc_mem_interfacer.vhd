@@ -58,19 +58,11 @@
         CBAND_EN                        : out std_logic;
         MASK_COUNTER                    : out std_logic_vector(7 downto 0);
         --STC_EventRepTimeWindow  -- NOTE: remove the fifo'sif not required 
-
+        O_STM_ACK_DIFFERNTIATOR        : out slv2_t;
 
         REPORT_WINDOW_PAYLOAD : out std_logic_vector(31 downto 0);---0X08
-        REPORT_FILTER_PAYLOAD : out std_logic_vector(31 downto 0);--0X09
+        REPORT_FILTER_PAYLOAD : out std_logic_vector(31 downto 0)--0X09
 
-
-        REPORT_WINDOW_PAYLOAD_CFIFO_RD_DATA   : out std_logic_vector(31 downto 0);
-        REPORT_WINDOW_PAYLOAD_CFIFO_RD_EN     : in std_logic; 
-        REPORT_WINDOW_PAYLOAD_CFIFO_EMPTY     : out std_logic;
-        
-        REPORT_FILTER_PAYLOAD_CFIFO_RD_DATA   : out std_logic_vector(31 downto 0);
-        REPORT_FILTER_PAYLOAD_CFIFO_RD_EN     : in std_logic; 
-        REPORT_FILTER_PAYLOAD_CFIFO_EMPTY     : out std_logic
 
     );
     end entity;
@@ -93,7 +85,7 @@ begin
             r.report_filter_time_wr_en <= '0';
             r.tow_bit               <= '0';   
             r.filter_counter_value  <= (others => '0');
-           
+            r.stm_ack_differntiator <= (others => '0');
             r.count                 <= 0;
             r.rd_en                 <= '0';
           
@@ -120,18 +112,21 @@ begin
                     v.count     := r.count + 2;
                        -- if r.count = 2  and s_an_re_full  = '0' then
                             if r.count = 2  then
-                            v.report_window_time_data := STC_ID & (DFIFO_RD_DATA(15 downto 0)); -- first 2 bytes of payload
-                            v.report_window_time_wr_en := '1';                                                          --note: 
-                            v.done                 := "10"; 
+                                v.report_window_time_data := STC_ID & (DFIFO_RD_DATA(15 downto 0)); -- first 2 bytes of payload
+                                v.report_window_time_wr_en := '1';                                                          --note: 
+                                v.done                 := "10"; 
+                                v.stm_ack_differntiator := "01";
+                            
                         end if; 
                 when x"09" => --STC_EventTypeFilter
                        
                         if r.count = 0  and s_an_filter_full = '0' then  -- first word fall through so data of 2 bytes available already
-                            if DFIFO_RD_DATA(0) = '1' and unsigned(DFIFO_RD_DATA(1 to 7))  <= 15  and  DFIFO_RD_DATA(15 downto 8) = X"00" OR  X"01" then     
-                                v.report_filter_time_data := STC_ID & (DFIFO_RD_DATA(15 downto 0)); --first two bytes
+                            if DFIFO_RD_DATA(0) = '1' and unsigned(DFIFO_RD_DATA(1 to 7))  <= 15 then     
+                                v.report_filter_time_data := STC_ID & (DFIFO_RD_DATA(15 downto 0)); --first two bytes 
                                 v.report_filter_time_wr_en := '1';
                                 v.filter_counter_value := DFIFO_RD_DATA(1 to 7);  ---it can be checked in payload handler or here does not matter 
                                 v.done                     := "10"; ---to differntiate  valid or invalid
+                                v.stm_ack_differntiator := "11";
                             else
                                 v.done :=  (others => '1');
                             end if;
@@ -162,7 +157,8 @@ begin
         CBAND_EN                    <= r.cband_en;
         REPORT_WINDOW_PAYLOAD       <= r.report_window_time_data;
         REPORT_FILTER_PAYLOAD       <= r.report_filter_time_data;
-        MASK_COUNTER                <=r.filter_counter_value;
+        O_STM_ACK_DIFFERNTIATOR     <= r.stm_ack_differntiator;
+
     end process MEM_IFER;
 
 
