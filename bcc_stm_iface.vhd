@@ -10,7 +10,7 @@ use ieee.numeric_std.all;
 
 package bcc_stm_iface is
 
-    constant SOF	: std_logic_vector(8 downto 0)	:= "110000000";
+  constant SOF	: std_logic_vector(8 downto 0)	:= "110000000";
 	constant EOF	: std_logic_vector(8 downto 0)	:= "101000000";
 	constant ERR	: std_logic_vector(8 downto 0)	:= "100100000";
 	constant c_pps_sync_pulse_4us   : natural := 128; --4us = 4000ns  : 4000/31.25 = 128 clck cycles
@@ -30,47 +30,73 @@ package bcc_stm_iface is
         cfifo_full	: std_logic;
 	end record;
 
-	type states_stm_gen is (IDLE,CHECK_FILTER_BIT_FROM_FIFO, WR_HDR, WR_CFIFO);
+	type states_stm_gen is (IDLE, WR_CFIFO_ACK_valid,WR_CFIFO_ACK_invalid,WR_CBAND_COUNTERS,WR_SBAND_COUNTERS, WR_CFIFO_SBAND,WR_CFIFO_CBAND,WR_ACK_FOR_VALID,WR_ACK_FOR_INVALID, WR_HDR, WR_CFIFO);
 
 	type req_type_stm is record
 			state		: states_stm_gen;
 			
-			cfifo_wr_en_an	: std_logic;
-			dfifo_wr_en_an	: std_logic;
-			dfifo_wdata_an	: std_logic_vector(17 downto 0);
-			cfifo_wdata_an	: std_logic_vector(15 downto 0);
+			c_cfifo_wr_en_an	: std_logic;
+			c_dfifo_wr_en_an	: std_logic;
+			c_dfifo_wdata_an	: std_logic_vector(17 downto 0);
+			c_cfifo_wdata_an	: std_logic_vector(15 downto 0);
 
-			cfifo_wr_en_ack	: std_logic;
-			dfifo_wr_en_ack	: std_logic;
-			dfifo_wdata_ack	: std_logic_vector(17 downto 0);
-			cfifo_wdata_ack	: std_logic_vector(15 downto 0);
+			s_cfifo_wr_en_an	: std_logic;
+			s_dfifo_wr_en_an	: std_logic;
+			s_dfifo_wdata_an	: std_logic_vector(17 downto 0);
+			s_cfifo_wdata_an	: std_logic_vector(15 downto 0);
+
+			ack_cfifo_wr_en	: std_logic;
+			ack_dfifo_wr_en	: std_logic;
+			ack_dfifo_wdata	: std_logic_vector(17 downto 0);
+			ack_cfifo_wdata	: std_logic_vector(15 downto 0);
 
 			rd_en_an   : std_logic;
 			rd_en_filter : std_logic;
 
 			tow_bit   : std_logic;
 			tow_bit_cunter : integer range 0 to 511; --128,192,256,320(4,6,8,10) s11 is just avoid overflow
-	    global_mask   : std_logic_vector(15 downto 0);
+	    subsecond_counter : integer range 0 to 2**16 -1;
+			global_mask   : std_logic_vector(15 downto 0);
 			stc_id       : std_logic_vector(15 downto 0);
 			payload_value :  std_logic_vector(15 downto 0); 
-			frame_cnt	: natural range 0 to 28;
+			frame_cnt_ack	: natural range 0 to 28;
+			frame_cnt_an	: natural range 0 to 28;
 			count       : integer;  
-			e_cnt_0     : std_logic_vector(7 downto 0);
-			e_cnt_1     : std_logic_vector(7 downto 0);
-			e_cnt_2     : std_logic_vector(7 downto 0);
-			e_cnt_3     : std_logic_vector(7 downto 0);
-			e_cnt_4     : std_logic_vector(7 downto 0);
-			e_cnt_5     : std_logic_vector(7 downto 0); 
-			e_cnt_6     : std_logic_vector(7 downto 0); 
-			e_cnt_7     : std_logic_vector(7 downto 0); 
-			e_cnt_8     : std_logic_vector(7 downto 0); 
-			e_cnt_9     : std_logic_vector(7 downto 0); 
-			e_cnt_10    : std_logic_vector(7 downto 0);
-			e_cnt_11    : std_logic_vector(7 downto 0);
-			e_cnt_12    : std_logic_vector(7 downto 0);
-			e_cnt_13    : std_logic_vector(7 downto 0);
-			e_cnt_14    : std_logic_vector(7 downto 0);
-			e_cnt_15    : std_logic_vector(7 downto 0);
+
+			sub_second_value  : std_logic_vector(15 downto 0);
+			e_s_cnt_0     : std_logic_vector(7 downto 0);
+			e_s_cnt_1     : std_logic_vector(7 downto 0);
+			e_s_cnt_2     : std_logic_vector(7 downto 0);
+			e_s_cnt_3     : std_logic_vector(7 downto 0);
+			e_s_cnt_4     : std_logic_vector(7 downto 0);
+			e_s_cnt_5     : std_logic_vector(7 downto 0); 
+			e_s_cnt_6     : std_logic_vector(7 downto 0); 
+			e_s_cnt_7     : std_logic_vector(7 downto 0); 
+			e_s_cnt_8     : std_logic_vector(7 downto 0); 
+			e_s_cnt_9     : std_logic_vector(7 downto 0); 
+			e_s_cnt_10    : std_logic_vector(7 downto 0);
+			e_s_cnt_11    : std_logic_vector(7 downto 0);
+			e_s_cnt_12    : std_logic_vector(7 downto 0);
+			e_s_cnt_13    : std_logic_vector(7 downto 0);
+			e_s_cnt_14    : std_logic_vector(7 downto 0);
+			e_s_cnt_15    : std_logic_vector(7 downto 0);
+
+			e_c_cnt_0     : std_logic_vector(7 downto 0);
+			e_c_cnt_1     : std_logic_vector(7 downto 0);
+			e_c_cnt_2     : std_logic_vector(7 downto 0);
+			e_c_cnt_3     : std_logic_vector(7 downto 0);
+			e_c_cnt_4     : std_logic_vector(7 downto 0);
+			e_c_cnt_5     : std_logic_vector(7 downto 0); 
+			e_c_cnt_6     : std_logic_vector(7 downto 0); 
+			e_c_cnt_7     : std_logic_vector(7 downto 0); 
+			e_c_cnt_8     : std_logic_vector(7 downto 0); 
+			e_c_cnt_9     : std_logic_vector(7 downto 0); 
+			e_c_cnt_10    : std_logic_vector(7 downto 0);
+			e_c_cnt_11    : std_logic_vector(7 downto 0);
+			e_c_cnt_12    : std_logic_vector(7 downto 0);
+			e_c_cnt_13    : std_logic_vector(7 downto 0);
+			e_c_cnt_14    : std_logic_vector(7 downto 0);
+			e_c_cnt_15    : std_logic_vector(7 downto 0);
 			crc_res     : std_logic_vector(15 downto 0);
 			
 end record;
