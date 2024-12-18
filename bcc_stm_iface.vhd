@@ -30,6 +30,8 @@ package bcc_stm_iface is
         cfifo_full	: std_logic;
 	end record;
 
+   type counter_vector is array (natural range <>) of std_logic_vector(7 downto 0);
+
 	type states_stm_gen is (IDLE, WR_CFIFO_ACK_valid,WR_CFIFO_ACK_invalid,WR_CBAND_COUNTERS,WR_SBAND_COUNTERS, WR_CFIFO_SBAND,WR_CFIFO_CBAND,WR_ACK_FOR_VALID,WR_ACK_FOR_INVALID, WR_HDR, WR_CFIFO);
 
 	type req_type_stm is record
@@ -64,39 +66,8 @@ package bcc_stm_iface is
 			count       : integer;  
 
 			sub_second_value  : std_logic_vector(15 downto 0);
-			e_s_cnt_0     : std_logic_vector(7 downto 0);
-			e_s_cnt_1     : std_logic_vector(7 downto 0);
-			e_s_cnt_2     : std_logic_vector(7 downto 0);
-			e_s_cnt_3     : std_logic_vector(7 downto 0);
-			e_s_cnt_4     : std_logic_vector(7 downto 0);
-			e_s_cnt_5     : std_logic_vector(7 downto 0); 
-			e_s_cnt_6     : std_logic_vector(7 downto 0); 
-			e_s_cnt_7     : std_logic_vector(7 downto 0); 
-			e_s_cnt_8     : std_logic_vector(7 downto 0); 
-			e_s_cnt_9     : std_logic_vector(7 downto 0); 
-			e_s_cnt_10    : std_logic_vector(7 downto 0);
-			e_s_cnt_11    : std_logic_vector(7 downto 0);
-			e_s_cnt_12    : std_logic_vector(7 downto 0);
-			e_s_cnt_13    : std_logic_vector(7 downto 0);
-			e_s_cnt_14    : std_logic_vector(7 downto 0);
-			e_s_cnt_15    : std_logic_vector(7 downto 0);
-
-			e_c_cnt_0     : std_logic_vector(7 downto 0);
-			e_c_cnt_1     : std_logic_vector(7 downto 0);
-			e_c_cnt_2     : std_logic_vector(7 downto 0);
-			e_c_cnt_3     : std_logic_vector(7 downto 0);
-			e_c_cnt_4     : std_logic_vector(7 downto 0);
-			e_c_cnt_5     : std_logic_vector(7 downto 0); 
-			e_c_cnt_6     : std_logic_vector(7 downto 0); 
-			e_c_cnt_7     : std_logic_vector(7 downto 0); 
-			e_c_cnt_8     : std_logic_vector(7 downto 0); 
-			e_c_cnt_9     : std_logic_vector(7 downto 0); 
-			e_c_cnt_10    : std_logic_vector(7 downto 0);
-			e_c_cnt_11    : std_logic_vector(7 downto 0);
-			e_c_cnt_12    : std_logic_vector(7 downto 0);
-			e_c_cnt_13    : std_logic_vector(7 downto 0);
-			e_c_cnt_14    : std_logic_vector(7 downto 0);
-			e_c_cnt_15    : std_logic_vector(7 downto 0);
+         e_s_cnt : counter_vector(15 downto 0);
+         e_c_cnt : counter_vector(15 downto 0);
 			crc_res     : std_logic_vector(15 downto 0);
 			
 end record;

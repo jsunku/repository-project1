@@ -131,11 +131,13 @@ begin
                v.logged_counter_o:= std_logic_vector(to_unsigned(r.filter_mask_counter_int,4));
            end if;
       when WINDOW_REPORT_ST =>
-        if sband_cband = '0' then 
-             v.s_or_cband := '0';
-        else
-            v.s_or_cband := '1';
-        end if;
+--        if sband_cband = '0' then 
+--             v.s_or_cband := '0';
+--        else
+--            v.s_or_cband := '1';
+--        end if;
+
+        v.s_or_cband := sband_cband;
 
           if r.clk_counter <= 0 then
             v.start_update_cunters := '1';

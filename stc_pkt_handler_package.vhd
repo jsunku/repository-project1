@@ -103,7 +103,7 @@
         valid_out   : slv2_t;
         sband_cband : std_logic; 
         payload_for_stm_ack : slv32_t;                  -- 0: S-band, 1: C-band
-        clk_counter : std_logic_vector(15 downto 0);
+        clk_counter : std_logic_vector(31 downto 0);
         s_or_cband  :std_logic; 
         valid_invalid_stc : slv2_t;  --for stm_execution 
         all_counters_value : slv2_t;
@@ -118,7 +118,7 @@
     --! \{
     type address_len_pair is record
         addr : std_logic_vector(octet -1 downto 0);
-        len  : std_logic_vector(3 downto 0); -- note: change the size if needed 
+        len  : std_logic_vector(7 downto 0); -- note: change the size if needed 
     end record;
 
     type address_len_array is array (natural range <>) of address_len_pair;
@@ -148,12 +148,12 @@
     --! returns (others => '1')
     function check_add_get_len(addr : std_logic_vector(octet -1 downto 0)) return std_logic_vector is
     begin
-        for i in c_address_len'range loop
-            if addr = c_address_len(i).addr then 
-                return c_address_len(i).len;
-            end if;
-        end loop;
-        return(others => '1');
+--        for i in c_address_len'range loop
+--            if addr = c_address_len(i).addr then 
+--                return c_address_len(i).len;
+--            end if;
+--        end loop;
+--        return(others => '1');
     end function;
 
 ----funtion to check payload value and return the the time to send update the value of  
@@ -161,9 +161,9 @@
         payload : slv16_t
     ) return unsigned is 
         --precalculated constants as per system clock
-        constant MS_100_count : integer := 3_200_000; --for 100ms = 0.1sec = 1000000000ns so 1000000000/31.25
-        constant CYCLE_PER_MS :integer := 32_000_000;-- becase payload numeric +1 is eauel to 0.1sec more 
-        variable result : unsigned(15 downto 0);     
+        constant MS_100_count : integer := 3_200; --for 100ms = 0.1sec = 1000000000ns so 1000000000/31.25
+        constant CYCLE_PER_MS :integer := 32_000;-- becase payload numeric +1 is eauel to 0.1sec more 
+        variable result : unsigned(31 downto 0);     
     begin
       if payload = x"0000" then
         result  := to_unsigned(MS_100_count,32);

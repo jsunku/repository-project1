@@ -31,6 +31,8 @@ port (
 
     REPORT_WINDOW_PAYLOAD_and_id   : in std_logic_vector(31 downto 0); 
     REPORT_FILTER_PAYLOAD_and_id   : in std_logic_vector(31 downto 0);
+    ALL_COUNTER_VALUE       : in slv2_t;
+    LOGGED_COUNTER_O    : in std_logic_vector(3 downto 0); 
     ACK_PYLOAD              : std_logic_vector(31 downto 0); 
 
     S_EVENT_TYPE_0_I	: in std_logic_vector(7 downto 0);
@@ -196,22 +198,22 @@ begin
 				
                 v.crc_res       := (others => '1');
 
-                v.e_s_cnt_0 := s_event_type_0_i;
-                v.e_s_cnt_1 := s_event_type_1_i;
-                v.e_s_cnt_2 := s_event_type_2_i;
-                v.e_s_cnt_3 := s_event_type_3_i;
-                v.e_s_cnt_4 := s_event_type_4_i; 
-                v.e_s_cnt_5 := s_event_type_5_i; 
-                v.e_s_cnt_6 := s_event_type_6_i; 
-                v.e_s_cnt_7 := s_event_type_7_i; 
-                v.e_s_cnt_8 := s_event_type_8_i; 
-                v.e_s_cnt_9 := s_event_type_9_i; 
-                v.e_s_cnt_10 := X"00"; 
-                v.e_s_cnt_11 := X"00"; 
-                v.e_s_cnt_12 := s_event_type_12_i; 
-                v.e_s_cnt_13 := X"00"; 
-                v.e_s_cnt_14 := X"00";
-                v.e_s_cnt_15 := X"00";
+                v.e_s_cnt(0) := s_event_type_0_i;
+                v.e_s_cnt(1) := s_event_type_1_i;
+                v.e_s_cnt(2) := s_event_type_2_i;
+                v.e_s_cnt(3) := s_event_type_3_i;
+                v.e_s_cnt(4) := s_event_type_4_i; 
+                v.e_s_cnt(5) := s_event_type_5_i; 
+                v.e_s_cnt(6) := s_event_type_6_i; 
+                v.e_s_cnt(7) := s_event_type_7_i; 
+                v.e_s_cnt(8) := s_event_type_8_i; 
+                v.e_s_cnt(9) := s_event_type_9_i; 
+                v.e_s_cnt(10):= X"00"; 
+                v.e_s_cnt(11):= X"00"; 
+                v.e_s_cnt(12):= s_event_type_12_i; 
+                v.e_s_cnt(13):= X"00"; 
+                v.e_s_cnt(14):= X"00";
+                v.e_s_cnt(15):= X"00";
   
                 v.e_c_cnt_0 := c_event_type_0_i;
                 v.e_c_cnt_1 := c_event_type_1_i;
@@ -369,7 +371,21 @@ begin
                 v.ack_dfifo_wdata	:= "00" & r.crc_res;
                 v.ack_dfifo_wr_en	:= '1';
                 v.frame_cnt_ack	:= r.frame_cnt_ack + 2;
-                v.state := WR_CFIFO_ACK_valid;
+            elsif r.frame_cnt_ack >= 14 then	 ----send crc
+                v.ack_dfifo_wdata	:= "00" & X"00" & X"00"; -- Default all zeros
+                v.ack_dfifo_wr_en	:= '1';
+                v.frame_cnt_ack	:= r.frame_cnt_ack + 2;
+                if ALL_COUNTER_VALUE /= "00" then
+                   if r.frame_cnt_ack = 14 + to_integer(LOGGED_COUNTER_O) then
+                      v.ack_dfifo_wdata	:= "00" & v.e_c_cnt(r.frame_cnt_ack-14) & X"00";
+                   end if;
+                   if r.frame_cnt_ack = 13 + to_integer(LOGGED_COUNTER_O) then
+                      v.ack_dfifo_wdata	:= "00" & X"00" & v.e_c_cnt(r.frame_cnt_ack-13);
+                   end if;
+                end if;
+                if r.frame_cnt_ack = 14+16 then
+                   v.state := WR_CFIFO_ACK_valid;
+                end if;
             end if;
 
 				
